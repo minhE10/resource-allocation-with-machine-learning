@@ -7,8 +7,8 @@ running processes using machine-learning predictions.
 
 - Generate synthetic process workloads.
 - Train a Random Forest model to predict CPU and memory demand.
-- Simulate a baseline priority-based allocator.
 - Simulate an ML-based allocator.
+- Compare against a baseline priority-based allocator when needed.
 - Compare CPU utilization, memory utilization, waiting time, turnaround time,
   throughput, and delayed processes.
 - Export charts for the report.
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ## Run CLI
 
-Run the full pipeline: generate data, train model, and simulate both allocators.
+Run the full pipeline: generate data, train model, and simulate the ML allocator.
 
 ```bash
 python main.py
@@ -38,10 +38,16 @@ python main.py --train --data data/sample/sample_workload.csv
 python main.py --simulate --data data/sample/sample_workload.csv
 ```
 
+Run a report-oriented comparison between baseline and ML:
+
+```bash
+python main.py --compare --data data/sample/sample_workload.csv
+```
+
 ## Run Dashboard
 
 ```bash
-streamlit run src/visualization/dashboard.py
+python -m streamlit run src/visualization/dashboard.py
 ```
 
 ## Project Structure

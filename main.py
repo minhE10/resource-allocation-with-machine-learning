@@ -20,7 +20,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--generate-data", action="store_true", help="Generate a sample workload CSV.")
     parser.add_argument("--train", action="store_true", help="Train and save the ML resource predictor.")
-    parser.add_argument("--simulate", action="store_true", help="Run baseline and ML simulations.")
+    parser.add_argument("--simulate", action="store_true", help="Run ML-based resource allocation simulation.")
+    parser.add_argument("--compare", action="store_true", help="Run both baseline and ML simulations for comparison.")
     parser.add_argument("--data", type=Path, default=DEFAULT_SAMPLE_DATA_PATH, help="Path to workload CSV.")
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL_PATH, help="Path to saved ML model.")
     parser.add_argument("--processes", type=int, default=120, help="Number of generated processes.")
@@ -45,7 +46,24 @@ def run_train(data_path: Path, model_path: Path) -> None:
     print(f"Memory MAE: {result.memory_mae:.2f} MB")
 
 
-def run_simulation(data_path: Path, model_path: Path, total_cpu: float, total_memory: float, output_dir: Path) -> None:
+def run_ml_simulation(data_path: Path, model_path: Path, total_cpu: float, total_memory: float, output_dir: Path) -> None:
+    processes = load_processes_from_csv(data_path)
+    predictor = ResourcePredictor.load(model_path)
+    ml_result = Simulator(
+        allocator=MLAllocator(total_cpu=total_cpu, total_memory=total_memory, predictor=predictor),
+        total_cpu=total_cpu,
+        total_memory=total_memory,
+    ).run(processes)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    save_resource_usage_chart(ml_result.timeline, output_dir / "ml_resource_usage.png", "ML Allocator")
+
+    print("ML metrics:")
+    print(ml_result.metrics.to_text())
+    print(f"Charts saved to {output_dir}")
+
+
+def run_comparison(data_path: Path, model_path: Path, total_cpu: float, total_memory: float, output_dir: Path) -> None:
     processes = load_processes_from_csv(data_path)
 
     baseline_result = Simulator(
@@ -74,14 +92,14 @@ def run_simulation(data_path: Path, model_path: Path, total_cpu: float, total_me
     print()
     print("ML metrics:")
     print(ml_result.metrics.to_text())
-    print(f"Charts saved to {output_dir}")
+    print(f"Comparison charts saved to {output_dir}")
 
 
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if not any([args.generate_data, args.train, args.simulate]):
+    if not any([args.generate_data, args.train, args.simulate, args.compare]):
         args.generate_data = True
         args.train = True
         args.simulate = True
@@ -91,7 +109,9 @@ def main() -> None:
     if args.train:
         run_train(args.data, args.model)
     if args.simulate:
-        run_simulation(args.data, args.model, args.cpu, args.memory, args.output_dir)
+        run_ml_simulation(args.data, args.model, args.cpu, args.memory, args.output_dir)
+    if args.compare:
+        run_comparison(args.data, args.model, args.cpu, args.memory, args.output_dir)
 
 
 if __name__ == "__main__":
