@@ -1,3 +1,9 @@
+[project]
+name = "resource-allocation-with-machine-learning"
+version = "0.1.0"
+description = "Operating Systems project: ML-based CPU and memory resource allocation simulation."
+requires-python = ">=3.10"
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]

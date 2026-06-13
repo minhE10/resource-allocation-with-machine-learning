@@ -104,14 +104,26 @@ def main() -> None:
         args.train = True
         args.simulate = True
 
-    if args.generate_data:
-        run_generate_data(args.data, args.processes)
-    if args.train:
-        run_train(args.data, args.model)
-    if args.simulate:
-        run_ml_simulation(args.data, args.model, args.cpu, args.memory, args.output_dir)
-    if args.compare:
-        run_comparison(args.data, args.model, args.cpu, args.memory, args.output_dir)
+    try:
+        if args.generate_data:
+            run_generate_data(args.data, args.processes)
+        if args.train:
+            run_train(args.data, args.model)
+        if args.simulate:
+            run_ml_simulation(args.data, args.model, args.cpu, args.memory, args.output_dir)
+        if args.compare:
+            run_comparison(args.data, args.model, args.cpu, args.memory, args.output_dir)
+    except FileNotFoundError as error:
+        parser.exit(
+            status=1,
+            message=(
+                f"Error: {error}\n"
+                "Hint: run `python main.py` for the full pipeline, or run "
+                "`python main.py --generate-data` then `python main.py --train` before simulation.\n"
+            ),
+        )
+    except ValueError as error:
+        parser.exit(status=1, message=f"Error: {error}\n")
 
 
 if __name__ == "__main__":
