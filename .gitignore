@@ -7,3 +7,4 @@ reports/figures/*.png
 data/sample/*.csv
 data/raw/*.csv
 data/processed/*.csv
+.vscode/
